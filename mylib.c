@@ -2,6 +2,8 @@
 
 #include <math.h>
 #include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
 
 // Using same epsilon value as in python.
 bool is_zero(double x) { return fabs(x) < 2.220446049250313e-15; }
@@ -50,11 +52,8 @@ extern inline void subtract_pivot_row(
     }
 }
 
-/**
- * @brief Implementation of Gaussian Elimination.
- * @param m
- * @param rows
- * @param cols
+/*
+ * Implementation of Gaussian Elimination, editing data in-place.
  */
 void row_reduce(double* m, const size_t rows, const size_t cols)
 {
@@ -88,3 +87,16 @@ void row_reduce(double* m, const size_t rows, const size_t cols)
         ++pivot_col;
     }
 }
+
+/*
+ * Implementation of Gaussian Elimination, returning a copy of the input data.
+ */
+double* row_reduce_copy(
+    const double* in_m, const size_t rows, const size_t cols)
+{
+    double* m = malloc(rows * cols * sizeof(double));
+    memcpy(m, in_m, rows * cols * sizeof(double));
+    row_reduce(m, rows, cols);
+    return m;
+}
+

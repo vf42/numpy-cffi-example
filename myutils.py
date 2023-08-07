@@ -53,8 +53,24 @@ def row_reduce_c(input_m):
     """
     Row reduce a matrix to reduced row echelon form using Gaussian elimination.
     """
+    # Make a copy of the input matrix.
     m = np.array(input_m, dtype=float)
     # Get a pointer to the numpy array data.
     d = ffi.from_buffer("double[]", m)
     mylib.row_reduce(d, m.shape[0], m.shape[1])
     return m
+
+
+def row_reduce_c2(input_m):
+    """
+    Row reduce a matrix to reduced row echelon form using Gaussian elimination.
+    """
+    # Get a pointer to the numpy array data.
+    ind = ffi.from_buffer("double[]", input_m)
+    # This will return a pointer to the raw data, which we have to process.
+    outd = mylib.row_reduce_copy(ind, input_m.shape[0], input_m.shape[1])
+    # Wrap the raw data to the buffer object.
+    b = ffi.buffer(outd, np.dtype("float").itemsize * input_m.size)[:]
+    # Feed it to numpy.
+    m = np.frombuffer(b, dtype=float)
+    return m.reshape(input_m.shape)

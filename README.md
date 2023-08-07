@@ -10,6 +10,11 @@ Note: things will probably work fine with older versions of both numpy and cffi 
 
 ## Running
 
+Build the C extension:
+```bash
+python mylib_extension_build.py
+```
+
 Run tests:
 ```bash
 python -m unittest myutils_test.py
