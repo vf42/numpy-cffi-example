@@ -23,3 +23,8 @@ Run tests:
 ```bash
 python -m unittest myutils_test.py
 ```
+
+Run the benchmark:
+```bash
+python benchmark.py
+```
