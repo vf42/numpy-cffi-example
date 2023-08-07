@@ -1,4 +1,4 @@
-# Numpy + CFFI example
+# Numpy + CFFI Example
 
 An example of using CFFI to wrap a C library for use with numpy, accompanied by a benchmark to evaluate the performance benefits.
 
