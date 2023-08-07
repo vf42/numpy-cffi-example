@@ -1,6 +1,10 @@
 import numpy as np
 
 
+import _my.lib as mylib
+from cffi import FFI
+ffi = FFI()
+
 tolerance = np.finfo(float).eps * 10
 
 
@@ -9,13 +13,6 @@ def is_zero(x):
     Check if x is effectively zero.
     """
     return np.abs(x) < tolerance
-
-
-def swap_rows(m, a, b):
-    """
-    Swap rows a and b in matrix m.
-    """
-    
 
 
 def row_reduce_py(input_m):
@@ -49,4 +46,15 @@ def row_reduce_py(input_m):
         # Move to the next pivot row and column.
         pivot_row += 1
         pivot_col += 1
+    return m
+
+
+def row_reduce_c(input_m):
+    """
+    Row reduce a matrix to reduced row echelon form using Gaussian elimination.
+    """
+    m = np.array(input_m, dtype=float)
+    # Get a pointer to the numpy array data.
+    d = ffi.from_buffer("double[]", m)
+    mylib.row_reduce(d, m.shape[0], m.shape[1])
     return m
