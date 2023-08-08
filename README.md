@@ -14,12 +14,18 @@ Note: things will probably work fine with older versions of both numpy and cffi 
 
 ## Running
 
+Run C tests:
+```bash
+gcc -Wall -o mylib_test mylib_test.c mylib.c
+./mylib_test
+```
+
 Build the C extension:
 ```bash
 python mylib_extension_build.py
 ```
 
-Run tests:
+Run Python tests:
 ```bash
 python -m unittest myutils_test.py
 ```

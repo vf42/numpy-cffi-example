@@ -68,9 +68,31 @@ def row_reduce_c2(input_m):
     # Get a pointer to the numpy array data.
     ind = ffi.from_buffer("double[]", input_m)
     # This will return a pointer to the raw data, which we have to process.
-    outd = mylib.row_reduce_copy(ind, input_m.shape[0], input_m.shape[1])
+    outd = ffi.gc(mylib.row_reduce_copy(
+        ind, input_m.shape[0], input_m.shape[1]), mylib.free)
     # Wrap the raw data to the buffer object.
     b = ffi.buffer(outd, np.dtype("float").itemsize * input_m.size)[:]
     # Feed it to numpy.
     m = np.frombuffer(b, dtype=float)
     return m.reshape(input_m.shape)
+
+
+def kernel(input_m):
+    """
+    Apply the minus one trick to matrix m and return the the solution space
+    for Ax=0 aka kernel / nullspace.
+    """
+    rows, cols = input_m.shape
+    ind = ffi.from_buffer("double[]", input_m)
+    outd = mylib.kernel(ind, rows, cols)
+    if outd.status == mylib.KERNEL_NOT_RREF:
+        raise ValueError("Input matrix must be in reduced row echelon form")
+    if outd.status == mylib.KERNEL_HAS_ZERO_ROWS:
+        raise ValueError("Input matrix can't have rows with only zeros")
+    result = []
+    for i in range(outd.count):
+        b = ffi.buffer(outd.m + i*cols, np.dtype("float").itemsize * cols)[:]
+        m = np.frombuffer(b, dtype=float)
+        result.append(m)
+    mylib.free(outd.m)
+    return result

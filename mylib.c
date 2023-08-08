@@ -100,3 +100,76 @@ double* row_reduce_copy(
     return m;
 }
 
+// Check for: no zero rows, RREF.
+kernel_result_status validate_kernel_input(
+    const double* m, const size_t rows, const size_t cols)
+{
+    double colsums[cols];
+    double rowsums[rows];
+    memset(colsums, 0, cols * sizeof(double));
+    memset(rowsums, 0, rows * sizeof(double));
+    long last_pivot_col = -1;
+    for (size_t r = 0; r < rows; r++) {
+        bool found_pivot = false;
+        for (size_t c = 0; c < cols; c++) {
+            if (!(found_pivot || is_zero(m[r * cols + c]))) {
+                if ((long)c <= last_pivot_col || !is_zero(colsums[c])
+                    || m[r * cols + c] != 1) {
+                    return KERNEL_NOT_RREF;
+                }
+                found_pivot = true;
+                last_pivot_col = c;
+            }
+            colsums[c] += m[r * cols + c];
+            rowsums[r] += fabs(m[r * cols + c]);
+        }
+    }
+    for (size_t r = 0; r < rows; r++) {
+        if (is_zero(rowsums[r])) {
+            return KERNEL_HAS_ZERO_ROWS;
+        }
+    }
+    return KERNEL_OK;
+}
+
+/*
+ * Return the kernel of the input matrix.
+ */
+kernel_result kernel(const double* m, size_t rows, const size_t cols)
+{
+    kernel_result_status status = validate_kernel_input(m, rows, cols);
+    if (status != KERNEL_OK) {
+        return (
+            kernel_result) { .m = NULL, .count = 0, .status = KERNEL_NOT_RREF };
+    }
+    size_t added = 0;
+    double* mext = calloc(cols * cols, sizeof(double));
+    for (size_t p = 0; p < cols; p++) {
+        if (p >= rows || is_zero(m[(p - added) * cols + p])) {
+            mext[p * cols + p] = -1;
+            rows += 1;
+            added += 1;
+        } else {
+            memcpy(
+                mext + p * cols, m + (p - added) * cols, sizeof(double) * cols);
+        }
+    }
+    kernel_result result
+        = { .m = added > 0 ? malloc(rows * added * sizeof(double)) : NULL,
+              .count = added,
+              .status = KERNEL_OK };
+    size_t copied = 0;
+    for (size_t p = 0; p < rows; p++) {
+        if (mext[p * cols + p] == -1) {
+            for (size_t r = 0; r < rows; r++) {
+                result.m[copied * cols + r] = mext[r * cols + p];
+            }
+            copied += 1;
+            if (copied == added) {
+                break;
+            }
+        }
+    }
+    free(mext);
+    return result;
+}
